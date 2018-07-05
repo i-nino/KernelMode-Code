@@ -4,8 +4,7 @@ POC code to prevent the loading of a specific driver (kernelexplorer.sys) from k
 
 ![Alt Text](block_kexplorer.gif)
 
-== OVERWRITING DRIVER ENTRY CODE
-==
+* OVERWRITING DRIVER ENTRY CODE *
 Another, much more invasive method, is to set up a LoadImageNotifyRoutine callback and overwrite the DriverEntry routine to simply return an appropriate NTSTATUS error code (STATUS_ACCESS_DENIED, STATUS_UNSUCCESSFUL, etc).
 
 	
