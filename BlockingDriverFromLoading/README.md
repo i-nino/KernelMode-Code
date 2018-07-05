@@ -30,14 +30,16 @@ Another, much more invasive method, is to set up a LoadImageNotifyRoutine callba
 				if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) == CS_ERR_OK) 
 				{
 					auto count = cs_disasm(handle, 
-																 EntryPoint, 
-																 11, 
-																 (ULONG_PTR)EntryPoint, 
-																 0, 
-																 &insn);
+							       EntryPoint, 
+							       11, 
+							       (ULONG_PTR)EntryPoint, 
+							       0, 
+							       &insn);
 					if (count) {
 						for (auto i = 0ul; i < count; ++i)
-							DbgPrint("0x%p: %s\t%s\n", insn[i].address, insn[i].mnemonic, insn[i].op_str);
+							DbgPrint("0x%p: %s\t%s\n", insn[i].address, 
+										insn[i].mnemonic, 
+										insn[i].op_str);
 						cs_free(insn, count);
 						insn = nullptr;
 					}	
@@ -51,21 +53,22 @@ Another, much more invasive method, is to set up a LoadImageNotifyRoutine callba
 						*(EntryPoint + i) = *(sc + i);
 					
 					count = cs_disasm(handle, 
-														entry_point, 
-														11, 
-														(ULONG_PTR) EntryPoint, 
-														0, 
-														&insn);
+							  entry_point, 
+							  11, 
+							  (ULONG_PTR) EntryPoint, 
+							  0, 
+							  &insn);
 														
 					/* print it out just to see in debugger */
 					if (count) {
 						for (auto i = 0ul; i < count; ++i)
-							DbgPrint("0x%p: %s\t%s\n", insn[i].address, insn[i].mnemonic, insn[i].op_str);
+							DbgPrint("0x%p: %s\t%s\n", insn[i].address, 
+										insn[i].mnemonic, 
+										insn[i].op_str);
 						cs_free(insn, count);
 					}
 					cs_close(&handle);
 				}
-				
 			}
 			else
 				DbgPrint("[LOADED DRIVER] %S ", ImageName->Buffer);
