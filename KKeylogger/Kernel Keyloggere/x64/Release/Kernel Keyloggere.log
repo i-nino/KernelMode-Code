@@ -1,0 +1,10 @@
+﻿  Building 'Kernel Keyloggere' with toolset 'WindowsKernelModeDriver10.0' and the 'Desktop' target platform.
+  DriverMain.cpp
+  KKeylogger.cpp
+  Generating Code...
+  Kernel Keyloggere.vcxproj -> D:\repos\Drivers\KKeylogger\x64\Release\KernelKeyloggere.sys
+  Done Adding Additional Store
+  Successfully signed: D:\repos\Drivers\KKeylogger\x64\Release\KernelKeyloggere.sys
+  
+  Inf2Cat task was skipped as there were no inf files to process
+  
