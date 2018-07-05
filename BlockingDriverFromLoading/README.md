@@ -16,7 +16,7 @@ Another, much more invasive method, is to set up a LoadImageNotifyRoutine callba
 	MOV RAX, 0xC0000022 ; STATUS_ACCESS_DEN14IED
 	RET;
 	
-	
+	/* using capstone for the disassembly */
 	void 
 	ImageNotifyCallback(
 		PUNICODE_STRING ImageName, 
@@ -62,7 +62,7 @@ Another, much more invasive method, is to set up a LoadImageNotifyRoutine callba
 						*(EntryPoint + i) = *(sc + i);
 					
 					count = cs_disasm(handle, 
-							  entry_point, 
+							  EntryPoint, 
 							  11, 
 							  (ULONG_PTR) EntryPoint, 
 							  0, 
