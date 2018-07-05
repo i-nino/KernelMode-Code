@@ -14,8 +14,8 @@ Another, much more invasive method, is to set up a LoadImageNotifyRoutine callba
 		HANDLE Pid, 
 		PIMAGE_INFO ImageInfo) 
 	{
-		if (!pid) {
-			
+		if (!pid) 
+		{	
 			UNICODE_STRING ProcessExplorer =
 				RTL_CONSTANT_STRING(LR"(\Device\HarddiskVolume3\Windows\System32\drivers\PROCEXP152.SYS)");
 			if (RtlCompareUnicodeString(&ProcessExplorer, ImageName, TRUE) == 0) 
