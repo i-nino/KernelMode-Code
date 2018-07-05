@@ -1,6 +1,9 @@
 * FILE SYSTEM MINIFILTER
 
-POC code to prevent the loading of a specific driver (kernelexplorer.sys) from kernel mode.   I use a file system minifilter in order to catch the mapping of executable code and set up the appropriate callback inorder to prevent (kerenlexplorer.sys) from loading, with no undocumentedtrickery involved, just registering for a IRP_MJ_ACQUIRE_FOR_SECION_SYNCHRONIZATION  event.
+Poc code to prevent the loading of a specific driver (kernelexplorer.sys) from kernel mode.
+I wrote a file system minifilter in order to catch the mapping of executable code and set up
+the appropriate callback in order to prevent the driver image from loading, with no undocumented
+trickery involved, just registering for an IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION event.
 
 ![Alt Text](block_kexplorer.gif)
 
