@@ -14,6 +14,7 @@ Another, much more invasive method, is to set up a LoadImageNotifyRoutine callba
 		HANDLE Pid, 
 		PIMAGE_INFO ImageInfo) 
 	{
+	
 		if (!pid) 
 		{	
 			UNICODE_STRING ProcessExplorer =
