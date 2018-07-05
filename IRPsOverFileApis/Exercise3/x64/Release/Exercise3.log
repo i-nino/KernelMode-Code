@@ -1,0 +1,23 @@
+﻿  Building 'Exercise3' with toolset 'WindowsKernelModeDriver10.0' and the 'Desktop' target platform.
+  Stamping x64\Release\Exercise3.inf [Version] section with DriverVer=07/05/2018,20.42.29.239
+  DriverMain.cpp
+  ip_ops.cpp
+  Generating Code...
+  Exercise3.vcxproj -> D:\repos\Drivers\Exercise3\x64\Release\Exercise3.sys
+  Done Adding Additional Store
+  Successfully signed: D:\repos\Drivers\Exercise3\x64\Release\Exercise3.sys
+  
+  ........................
+  Signability test complete.
+  
+  Errors:
+  None
+  
+  Warnings:
+  None
+  
+  Catalog generation complete.
+  D:\repos\Drivers\Exercise3\x64\Release\Exercise3\exercise3.cat
+  Done Adding Additional Store
+  Successfully signed: D:\repos\Drivers\Exercise3\x64\Release\Exercise3\exercise3.cat
+  
