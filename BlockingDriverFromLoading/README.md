@@ -83,8 +83,3 @@ Another, much more invasive method, is to set up a LoadImageNotifyRoutine callba
 	
 
 ![](imgcb_driverentry.png)
-
-=
-=
-
-
