@@ -57,15 +57,15 @@ namespace {
 		stack->Parameters.SetFile.Length = 1ul;
 
 		IoSetCompletionRoutine(Irp,
-							   IoCompletionRoutine,
-							   nullptr,
-							   TRUE, TRUE, TRUE);
+				       IoCompletionRoutine,
+				       nullptr,
+				       TRUE, TRUE, TRUE);
 		if (IoCallDriver(DeviceObj, Irp) == STATUS_PENDING)
 			KeWaitForSingleObject(&KEvent,
-								  Executive,
-								  KernelMode,
-								  TRUE,
-								  nullptr);
+					      Executive,
+					      KernelMode,
+					      TRUE,
+					      nullptr);
 		return Irp->IoStatus.Status;
 
 	}
@@ -81,34 +81,34 @@ namespace {
 		UNICODE_STRING uTargetName {};
 		RtlInitUnicodeString(&uTargetName, FileName);
 		InitializeObjectAttributes(&ObjAttrs,
-								   &uTargetName,
-								   OBJ_CASE_INSENSITIVE,
-								   nullptr,
-								   nullptr);
+					   &uTargetName,
+					   OBJ_CASE_INSENSITIVE,
+					   nullptr,
+					   nullptr);
 
 		HANDLE FileHandle {};
 		PFILE_OBJECT FileObj {};
 		auto status = ZwCreateFile(&FileHandle,
-								   0x100001, /* DELETE | FILE_READ_ACCESS */
-								   &ObjAttrs,
-								   &iosb,
-								   nullptr,
-								   FILE_ATTRIBUTE_NORMAL,
-								   FILE_SHARE_READ | FILE_SHARE_DELETE,
-								   FILE_OPEN,
-								   FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-								   nullptr,
-								   0);
+					   0x100001, /* DELETE | FILE_READ_ACCESS */
+					   &ObjAttrs,
+					   &iosb,
+					   nullptr,
+					   FILE_ATTRIBUTE_NORMAL,
+					   FILE_SHARE_READ | FILE_SHARE_DELETE,
+					   FILE_OPEN,
+					   FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+					   nullptr,
+					   0);
 		if (!NT_SUCCESS(status)) {
 			DbgPrint("ZwCreateFile failed : 0x%08X\n", status);
 			return status;
 		}
 		status = ObReferenceObjectByHandle(FileHandle,
-										   0,
-										   *IoFileObjectType,
-										   KernelMode,
-										   (PVOID*) &FileObj,
-										   nullptr);
+						   0,
+						   *IoFileObjectType,
+						   KernelMode,
+						   (PVOID*) &FileObj,
+						   nullptr);
 		if (NT_SUCCESS(status)) {
 			ObfDereferenceObject(FileObj);
 			status = CreateAndSendIrpForDeletion(FileObj, FileHandle);
@@ -132,10 +132,10 @@ CreateSystemThreadToDeleteFile()
 	HANDLE ThreadHandle;
 	OBJECT_ATTRIBUTES ObjAttrs;
 	InitializeObjectAttributes(&ObjAttrs, 
-							   nullptr, 
-							   OBJ_KERNEL_HANDLE, 
-							   nullptr,
-							   nullptr);
+				   nullptr, 
+				   OBJ_KERNEL_HANDLE, 
+				   nullptr,
+				   nullptr);
 	auto ThreadRoutine = [](PVOID Context)
 	{
 		TRACER();
@@ -148,12 +148,12 @@ CreateSystemThreadToDeleteFile()
 
 	};
 	auto Status = PsCreateSystemThread(&ThreadHandle,
-									   THREAD_ALL_ACCESS,
-									   nullptr,
-									   nullptr,
-									   nullptr,
-									   ThreadRoutine,
-									   nullptr);
+					   THREAD_ALL_ACCESS,
+					   nullptr,
+					   nullptr,
+					   nullptr,
+					   ThreadRoutine,
+					   nullptr);
 	if (ThreadHandle > 0)
 		ZwClose(ThreadHandle);
 	return Status;
@@ -188,22 +188,22 @@ namespace {
 		UNICODE_STRING uTargetName {};
 		RtlInitUnicodeString(&uTargetName, Data->FileName);
 		InitializeObjectAttributes(&ObjAttrs,
-								   &uTargetName,
-								   OBJ_CASE_INSENSITIVE,
-								   nullptr,
-								   nullptr);
+					   &uTargetName,
+					   OBJ_CASE_INSENSITIVE,
+					   nullptr,
+					   nullptr);
 		HANDLE FileHandle {};
 		auto Status = ZwCreateFile(&FileHandle,
-								   0x100001,
-								   &ObjAttrs,
-								   &StatusBlk,
-								   nullptr,
-								   FILE_ATTRIBUTE_NORMAL,
-								   FILE_SHARE_READ | FILE_SHARE_DELETE,
-								   FILE_OPEN,
-								   FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-								   nullptr,
-								   0);
+					   0x100001,
+					   &ObjAttrs,
+					   &StatusBlk,
+					   nullptr,
+					   FILE_ATTRIBUTE_NORMAL,
+					   FILE_SHARE_READ | FILE_SHARE_DELETE,
+					   FILE_OPEN,
+					   FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+					   nullptr,
+					   0);
 		if (!NT_SUCCESS(Status)) {
 			DbgPrint("[%s] ZwCreateFile failed : 0x%08Xl\n", __FUNCTION__,
 					 Status);
@@ -213,10 +213,10 @@ namespace {
 		FILE_DISPOSITION_INFORMATION Fdo {};
 		Fdo.DeleteFile = TRUE;
 		Status = ZwSetInformationFile(FileHandle,
-									  &StatusBlk,
-									  &Fdo,
-									  sizeof(Fdo),
-									  FileDispositionInformation);
+					      &StatusBlk,
+					      &Fdo,
+					      sizeof(Fdo),
+					      FileDispositionInformation);
 		if (!NT_SUCCESS(Status))
 			DbgPrint("[%s] ZwSetInformationFile failed : 0x%08Xl\n", __FUNCTION__,
 					 Status);
@@ -243,10 +243,10 @@ DeleteFile(
 																	   KEXP_TAG);
 	if (!WorkItemData)
 		return STATUS_NO_MEMORY;
-	/* page fault in nonpageable area w/ ZwCreateFile (IRQL?), so allocated directly in NonPagedPool */
+	/* page fault in nonpageable area w/ ZwCreateFile (too lazy to investigate), so allocated directly to NonPagedPool */
 	WorkItemData->FileName = (wchar_t*) ExAllocatePoolWithTag(NonPagedPool,
-															  wcslen(FileName) * 2,
-															  KEXP_TAG);
+								  wcslen(FileName) * 2,
+								  KEXP_TAG);
 	wcscpy(WorkItemData->FileName, FileName);
 	WorkItemData->WorkItemDelete = IoAllocateWorkItem((PDEVICE_OBJECT) KDriverObj);
 	IoQueueWorkItem(WorkItemData->WorkItemDelete,
