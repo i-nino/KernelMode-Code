@@ -11,7 +11,7 @@ overwrite the DriverEntry routine to simply return an appropriate NTSTATUS error
 	
 	MOV RAX, 0xC0000022 ; STATUS_ACCESS_DEN14IED
 	RET;
-	PIMAGE_INFO.ImageBase -> PIMAGE_DOS_HEADER -> NT_HEADER -> ENTRYPOINT
+	
 	
 
-![Alt Text](demo.gif)
+![Alt Text](block_kexplorer.gif)
