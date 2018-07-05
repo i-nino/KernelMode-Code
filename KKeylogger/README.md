@@ -6,6 +6,7 @@ you can't really load it w/o disabling the driver signing policy lol )
 Disable driver signing policy:  cmd> bcdedit /set testsigning on 
 
 
+![Alt Text](demo.gif)
 
 ![](Demo.PNG)
 
