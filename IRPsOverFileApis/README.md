@@ -1,5 +1,6 @@
 
-* SampleE (3rd question)
+* SampleE (3rd question) *
+
 Instead of deleting a file the documented way, the malware skips the native api
 and creates an IRP from scratch that resembles the file deletion process.
 
