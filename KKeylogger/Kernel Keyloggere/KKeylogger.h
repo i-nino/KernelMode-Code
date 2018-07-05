@@ -78,9 +78,9 @@ namespace KKeylogger {
 	);
 	
 	NTSTATUS
-		InitializeThreadLogger(
-			PDRIVER_OBJECT DriverObj
-		);
+	InitializeThreadLogger(
+		PDRIVER_OBJECT DriverObj
+	);
 }
 
 
