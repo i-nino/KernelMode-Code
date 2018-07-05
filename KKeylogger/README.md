@@ -8,6 +8,5 @@ Disable driver signing policy:  cmd> bcdedit /set testsigning on
 
 ![Alt Text](demo.gif)
 
-![](Demo.PNG)
 
 ![](VirusTotal%20Scan.PNG)
