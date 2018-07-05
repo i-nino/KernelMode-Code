@@ -1,6 +1,6 @@
 Windows KernelMode keylogger, based off of original Klog1 from rootkit.com 
 but modified for efficient memory usage and x64 support.  Tested on latest
 Win10x64 2018 Spring Release.   Comically, undetectable (outside of the fact
-you can't really load it w/o disabled driver signing policy lol )
+you can't really load it w/o disabling the driver signing policy lol )
 
-Disable driver signing policy to load:  cmd> bcdedit /set testsigning on 
+Disable driver signing policy:  cmd> bcdedit /set testsigning on 
