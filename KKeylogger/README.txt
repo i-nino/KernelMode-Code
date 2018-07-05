@@ -1,2 +1,0 @@
-KernelMode keylogger, based off of original Klog1 from rootkit.com but modified for efficient memory usage and Win10x64 2018 Spring Release support.
-Disable driver signing policy to load:  cmd> bcdedit /set testsigning on 
