@@ -1,0 +1,21 @@
+﻿  Building 'KApcInjection' with toolset 'WindowsKernelModeDriver10.0' and the 'Desktop' target platform.
+  Stamping Release\KApcInjection.inf [Version] section with DriverVer=07/14/2018,14.14.34.948
+  KApcInjection.cpp
+  KApcInjection.vcxproj -> D:\repos\Drivers\KApcInjection\Release\KApcInjection.sys
+  Done Adding Additional Store
+  Successfully signed: D:\repos\Drivers\KApcInjection\Release\KApcInjection.sys
+  
+  ........................
+  Signability test complete.
+  
+  Errors:
+  None
+  
+  Warnings:
+  None
+  
+  Catalog generation complete.
+  D:\repos\Drivers\KApcInjection\Release\KApcInjection\kapcinjection.cat
+  Done Adding Additional Store
+  Successfully signed: D:\repos\Drivers\KApcInjection\Release\KApcInjection\kapcinjection.cat
+  
