@@ -1,4 +1,4 @@
-* FILE SYSTEM MINIFILTER
+# FILE SYSTEM MINIFILTER
 
 Poc code to prevent the loading of a specific driver (kernelexplorer.sys) from kernel mode.
 I wrote a file system minifilter in order to catch the mapping of executable code and set up
