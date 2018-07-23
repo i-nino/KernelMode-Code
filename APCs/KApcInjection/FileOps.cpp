@@ -4,9 +4,9 @@
 
 #define GET_PTR(CAST_TYPE, RVA) \
 	((CAST_TYPE*) (((PBYTE)Module)+ RawOffsetByRVA(Section, \
-												  NumOfSections, \
-												  szModule, \
-												  (RVA))))
+			NumOfSections, \
+			szModule, \
+			(RVA))))
 #define ERROR(status)  \
 	DbgPrint("NT_ERROR: 0x%08X [%s]\n", status, __FUNCTION__); \
 	return status 
@@ -58,10 +58,84 @@ RawOffsetByRVA(
 	return (Offset < FileSz) ? Offset : 0ul;
 }
 
+/* IRP_MJ_READ */
+NTSTATUS
+ReadFile(
+	HANDLE FileHandle,
+	PVOID Buffer,
+	ULONG Length
+)
+{
+	PFILE_OBJECT FileObj {};
+	auto Status = ObReferenceObjectByHandle(FileHandle,
+											FILE_READ_DATA,
+											*IoFileObjectType,
+											KernelMode,
+											(PVOID*) &FileObj,
+											nullptr);
+	if (!NT_SUCCESS(Status)) {
+		return Status;
+	}
+
+	IO_STATUS_BLOCK StatusBlk {};
+	KEVENT Event {};
+
+	auto DeviceObj = IoGetRelatedDeviceObject(FileObj);
+	auto Irp = IoAllocateIrp(DeviceObj->StackSize, TRUE);
+	if (!Irp)
+		return STATUS_NO_MEMORY;
 
 
+	/* clear fileobj's event: why? */
+	KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+	/* set up the irp */
+	Irp->UserIosb = &StatusBlk;
+	Irp->UserEvent = &Event;
+	Irp->Tail.Overlay.OriginalFileObject = FileObj;
+	Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+	Irp->RequestorMode = KernelMode;
+	Irp->Overlay.AsynchronousParameters.UserApcContext = nullptr;
+	Irp->Overlay.AsynchronousParameters.UserApcRoutine = nullptr;
+	Irp->CancelRoutine = nullptr;
+	Irp->Cancel = FALSE;
+	Irp->PendingReturned = FALSE;
+	Irp->AssociatedIrp.SystemBuffer = nullptr;
+	Irp->MdlAddress = nullptr;
+
+	/* set up io_stack */
+	LARGE_INTEGER ByteOffset {};
+	auto Stack = IoGetNextIrpStackLocation(Irp);
+	Stack->MajorFunction = IRP_MJ_READ;
+	Stack->FileObject = FileObj;
+	Stack->Parameters.Read.Key = 0;
+	Stack->Parameters.Read.Length = Length;
+	Stack->Parameters.Read.ByteOffset = ByteOffset; 
+
+	/* user buffer to receive input: no validation checking whatsoever :) */
+	Irp->UserBuffer = Buffer;
+
+	/* set deferred read flags */
+	Irp->Flags |= (IRP_READ_OPERATION | IRP_DEFER_IO_COMPLETION);
+
+	/* now have to send to driver */
+	IoSetCompletionRoutine(Irp,
+						   ReadCompletion,
+						   nullptr,
+						   TRUE, TRUE, TRUE);
+	if (IoCallDriver(DeviceObj, Irp) == STATUS_PENDING)
+		KeWaitForSingleObject(&FileObj->Event,
+							  Executive,
+							  KernelMode,
+							  TRUE,
+							  nullptr);
 
 
+	return Irp->IoStatus.Status;
+}
+
+
+#define IRP_READ
 NTSTATUS
 Injection::
 KOpenFile(
@@ -117,7 +191,12 @@ KOpenFile(
 		ZwClose(FileHandle);
 		ERROR(status);
 	}
-	LARGE_INTEGER ByteOffset {};
+#if defined(IRP_READ)
+	status = ReadFile(FileHandle,
+					  *ModuleBase,
+					  *szModule);
+#else
+	LARGE_INTEGER ByteOffset {}; 
 	status = ZwReadFile(FileHandle,
 						nullptr,
 						nullptr,
@@ -126,6 +205,7 @@ KOpenFile(
 						*ModuleBase, *szModule,
 						&ByteOffset,
 						nullptr);
+#endif
 
 	if (!NT_SUCCESS(status)) {
 		ExFreePoolWithTag(ModuleBase, KAPC_TAG);
