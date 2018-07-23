@@ -32,8 +32,8 @@ SectionByRVA(
 	auto Header = Section;
 	for (size_t i {}; i < NumOfSections; ++Header) {
 		if (IS_ADDRESS_BETWEEN(Header->VirtualAddress,
-			(Header->VirtualAddress + Header->SizeOfRawData),
-								Rva))
+				       (Header->VirtualAddress + Header->SizeOfRawData),
+				       Rva))
 			return Section;
 	}
 	return nullptr;
@@ -48,8 +48,8 @@ RawOffsetByRVA(
 	ULONG Rva)
 {
 	auto SectionHeader = SectionByRVA(Section,
-										NumOfSections,
-										Rva);
+					  NumOfSections,
+					  Rva);
 	if (!SectionHeader)
 		return { 0 };
 	auto Delta = Rva - SectionHeader->VirtualAddress;
@@ -68,11 +68,11 @@ ReadFile(
 {
 	PFILE_OBJECT FileObj {};
 	auto Status = ObReferenceObjectByHandle(FileHandle,
-											FILE_READ_DATA,
-											*IoFileObjectType,
-											KernelMode,
-											(PVOID*) &FileObj,
-											nullptr);
+						FILE_READ_DATA,
+						*IoFileObjectType,
+						KernelMode,
+						(PVOID*) &FileObj,
+						nullptr);
 	if (!NT_SUCCESS(Status)) {
 		return Status;
 	}
@@ -120,16 +120,15 @@ ReadFile(
 
 	/* now have to send to driver */
 	IoSetCompletionRoutine(Irp,
-						   ReadCompletion,
-						   nullptr,
-						   TRUE, TRUE, TRUE);
+				ReadCompletion,
+				nullptr,
+				TRUE, TRUE, TRUE);
 	if (IoCallDriver(DeviceObj, Irp) == STATUS_PENDING)
 		KeWaitForSingleObject(&FileObj->Event,
-							  Executive,
-							  KernelMode,
-							  TRUE,
-							  nullptr);
-
+				      Executive,
+				      KernelMode,
+				      TRUE,
+				      nullptr);
 
 	return Irp->IoStatus.Status;
 }
@@ -147,36 +146,36 @@ KOpenFile(
 	UNICODE_STRING Name {};
 	RtlInitUnicodeString(&Name, FileName);
 	InitializeObjectAttributes(&ObjAttrs,
-							   &Name,
-							   OBJ_CASE_INSENSITIVE,
-							   nullptr,
-							   nullptr);
+				   &Name,
+				   OBJ_CASE_INSENSITIVE,
+				   nullptr,
+				   nullptr);
 
 	HANDLE FileHandle;
 	IO_STATUS_BLOCK StatusBlk;
 	if (KeGetCurrentIrql() != PASSIVE_LEVEL)
 		return STATUS_INVALID_DEVICE_STATE;
 	auto status = ZwCreateFile(&FileHandle,
-							   GENERIC_READ,
-							   &ObjAttrs,
-							   &StatusBlk,
-							   nullptr,
-							   FILE_ATTRIBUTE_NORMAL,
-							   FILE_SHARE_READ,
-							   FILE_OPEN,
-							   FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
-							   nullptr,
-							   0);
+				   GENERIC_READ,
+				   &ObjAttrs,
+				   &StatusBlk,
+				   nullptr,
+				   FILE_ATTRIBUTE_NORMAL,
+				   FILE_SHARE_READ,
+				   FILE_OPEN,
+				   FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+				   nullptr,
+				   0);
 	if (!NT_SUCCESS(status)) {
 		ERROR(status);
 	}
 
 	FILE_STANDARD_INFORMATION FileInfo = { sizeof(FileInfo) };
 	status = ZwQueryInformationFile(FileHandle,
-									&StatusBlk,
-									&FileInfo,
-									sizeof(FileInfo),
-									FileStandardInformation);
+					&StatusBlk,
+					&FileInfo,
+					sizeof(FileInfo),
+					FileStandardInformation);
 	if (!NT_SUCCESS(status)) {
 		ZwClose(FileHandle);
 		ERROR(status);
@@ -185,26 +184,26 @@ KOpenFile(
 	*szModule = FileInfo.EndOfFile.LowPart;
 	DbgPrint("[+] %ws file size: %08X\n", Name.Buffer, *szModule);
 	*ModuleBase = (PBYTE) ExAllocatePoolWithTag(NonPagedPool,
-												*szModule,
-												KAPC_TAG);
+						    *szModule,
+						    KAPC_TAG);
 	if (!(*ModuleBase)) {
 		ZwClose(FileHandle);
 		ERROR(status);
 	}
 #if defined(IRP_READ)
 	status = ReadFile(FileHandle,
-					  *ModuleBase,
-					  *szModule);
+			  *ModuleBase,
+			  *szModule);
 #else
 	LARGE_INTEGER ByteOffset {}; 
 	status = ZwReadFile(FileHandle,
-						nullptr,
-						nullptr,
-						nullptr,
-						&StatusBlk,
-						*ModuleBase, *szModule,
-						&ByteOffset,
-						nullptr);
+			    nullptr,
+			    nullptr,
+			    nullptr,
+			    &StatusBlk,
+			    *ModuleBase, *szModule,
+			    &ByteOffset,
+			    nullptr);
 #endif
 
 	if (!NT_SUCCESS(status)) {
@@ -228,8 +227,8 @@ KGetRoutineAddressFromModule(
 	PBYTE Module {};
 	ULONG szModule {};
 	auto status = KOpenFile(ModulePath,
-							&Module,
-							&szModule);
+				&Module,
+				&szModule);
 	if (!NT_SUCCESS(status))
 		return status;
 
@@ -247,8 +246,8 @@ KGetRoutineAddressFromModule(
 				ExportRva < Section[i].VirtualAddress + Section[i].Misc.VirtualSize) {
 				Section = (PIMAGE_SECTION_HEADER) &Section[i];
 				ExportDir = (PIMAGE_EXPORT_DIRECTORY) ((PBYTE) Module +
-													   Section->PointerToRawData +
-													   ExportRva - Section->VirtualAddress);
+									   Section->PointerToRawData +
+									   ExportRva - Section->VirtualAddress);
 				break;
 			}
 		}
@@ -259,9 +258,9 @@ KGetRoutineAddressFromModule(
 
 		for (size_t i {}; i < ExportDir->NumberOfNames; ++i) {
 			auto NameRaw = RawOffsetByRVA(Section,
-										  NumOfSections,
-										  szModule,
-										  Names[i]);
+						      NumOfSections,
+						      szModule,
+						      Names[i]);
 			auto Name = (PCHAR) (Module + NameRaw);
 
 			if (strcmp(FunctionName, Name) == 0) {
