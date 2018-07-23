@@ -217,8 +217,8 @@ namespace {
 		IO_STATUS_BLOCK StatusBlk {};
 		KEVENT KEvent {};
 		KeInitializeEvent(&KEvent,
-						  NotificationEvent,
-						  FALSE);
+				  NotificationEvent,
+				  FALSE);
 
 		auto Irp = IoBuildDeviceIoControlRequest(IOCTL_KEYBOARD_QUERY_INDICATORS,
 							 DeviceExt->LowerDevice,
