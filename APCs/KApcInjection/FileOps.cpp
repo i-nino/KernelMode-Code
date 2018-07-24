@@ -85,8 +85,6 @@ ReadFile(
 	if (!Irp)
 		return STATUS_NO_MEMORY;
 
-
-	/* clear fileobj's event: why? */
 	KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
 	/* set up the irp */
