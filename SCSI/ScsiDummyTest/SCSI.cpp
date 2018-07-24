@@ -58,19 +58,19 @@ SendScsiCmd(
 
 	KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 	auto Irp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_PASS_THROUGH_DIRECT,
-											 DeviceObj,
-											 &Data, sizeof(Data),
-											 &Data, sizeof(Data),
-											 FALSE,
-											 &Event,
-											 &StatusBlk);
+						 DeviceObj,
+						 &Data, sizeof(Data),
+						 &Data, sizeof(Data),
+						 FALSE,
+						 &Event,
+						 &StatusBlk);
 	if (Irp) {
 		if (IofCallDriver(DeviceObj, Irp) == STATUS_PENDING) {
 			KeWaitForSingleObject(&Event,
-								  Executive,
-								  KernelMode,
-								  FALSE,
-								  0);
+					      Executive,
+					      KernelMode,
+					      FALSE,
+					      0);
 			return Irp->IoStatus.Status;
 		}
 	}
@@ -107,25 +107,25 @@ ScsiQueryCapacity(
 	ScsiData.Cdb[0] = SCSIOP_READ_CAPACITY;
 
 	KeInitializeEvent(&Event,
-					  SynchronizationEvent,
-					  FALSE);
+			  SynchronizationEvent,
+			  FALSE);
 
 	auto Irp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_PASS_THROUGH_DIRECT,
-											 DeviceObj,
-											 &ScsiData, sizeof(ScsiData),
-											 &ScsiData, sizeof(ScsiData),
-											 FALSE,
-											 &Event,
-											 &StatusBlk);
-	if (Irp) {
+						 DeviceObj,
+						 &ScsiData, sizeof(ScsiData),
+						 &ScsiData, sizeof(ScsiData),
+						 FALSE,
+						 &Event,
+						 &StatusBlk);
+if (Irp) {
 		auto Status = IoCallDriver(DeviceObj, Irp);
 
 		if (Status == STATUS_PENDING) {
-			KeWaitForSingleObject(&Event,
-								  Executive,
-								  KernelMode,
-								  FALSE,
-								  0);
+			KeWaitForSingleObject(&Event, 
+			                      Executive,
+					      KernelMode,
+					      FALSE,
+					      0);
 			if (StatusBlk.Status == STATUS_SUCCESS)
 				goto PrintShit;
 		}
@@ -157,42 +157,44 @@ InitializeSCSISystemThread()
 		HANDLE FileHandle;
 		PFILE_OBJECT FileObj;
 		InitializeObjectAttributes(&ObjAttrs,
-								   &TargetName,
-								   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-								   nullptr,
-								   nullptr);
+					   &TargetName,
+					   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+					   nullptr,
+					   nullptr);
 		auto Status = IoCreateFile(&FileHandle,
-								   1,
-								   &ObjAttrs,
-								   &StatusBlk,
-								   nullptr,
-								   0,
-								   FILE_SHARE_VALID_FLAGS,
-								   FILE_OPEN,
-								   0,
-								   nullptr,
-								   0,
-								   CreateFileTypeNone,
-								   0,
-								   0x400);
+					   1,
+					   &ObjAttrs,
+					   &StatusBlk,
+					   nullptr,
+					   0,
+					   FILE_SHARE_VALID_FLAGS,
+					   FILE_OPEN,
+					   0,
+					   nullptr,
+					   0,
+					   CreateFileTypeNone,
+					   0,
+					   0x400);
 		if (!NT_SUCCESS(Status))
 			return;
 
 		Status = ObReferenceObjectByHandle(FileHandle,
-										   0,
-										   *IoFileObjectType,
-										   KernelMode,
-										   (PVOID*) &FileObj,
-										   nullptr);
+						   0,
+						   *IoFileObjectType,
+						   KernelMode,
+						   (PVOID*) &FileObj,
+						   nullptr);
 		
 		ZwClose(FileHandle);
 		if (NT_SUCCESS(Status)) {
 			ObDereferenceObject(FileObj);
 
 			auto DataBuffer = (BYTE*) ExAllocatePoolWithTag(NonPagedPool,
-															0x200,
-															'iScS');
+									0x200,
+									'iScS');
 			auto DevCapacity = (PREAD_CAPACITY_DATA) ExAllocatePoolWithTag(NonPagedPool,
+										       0x8,
+										       'iScS');
 																		   0x8,
 																		   'iScS');
 			RtlSecureZeroMemory(DataBuffer, sizeof(DataBuffer));
@@ -200,27 +202,21 @@ InitializeSCSISystemThread()
 
 			/* demo to test since ScsiQueryCapacity works*/
 			SCSI::SendScsiCmd(FileObj->DeviceObject,
-							  SCSIOP_READ_CAPACITY,
-							  SCSI_IOCTL_DATA_IN,
-							  DevCapacity,
-							  8,
-							  0,
-							  0);
+					  SCSIOP_READ_CAPACITY,
+					  SCSI_IOCTL_DATA_IN,
+					  DevCapacity,
+					  8,
+					  0,
+					  0);
 			ExFreePoolWithTag(DevCapacity, 'iScS');
 			SCSI::SendScsiCmd(FileObj->DeviceObject,
-							  SCSIOP_READ,
-							  SCSI_IOCTL_DATA_IN,
-							  DataBuffer,
-							  0x200,
-							  0,
-							  1);
-			/*SCSI::SendScsiCmd(FileObj->DeviceObject,
-							  SCSIOP_READ,
-							  SCSI_IOCTL_DATA_IN,
-							  DataBuffer,
-							  0x200,
-							  0x08,
-							  1);*/
+					  SCSIOP_READ,
+					  SCSI_IOCTL_DATA_IN,
+					  DataBuffer,
+					  0x200,
+					  0,
+					  1);
+			
 			ExFreePoolWithTag(DataBuffer, 'iScS');
 			SCSI::ScsiQueryCapacity(FileObj->DeviceObject);
 		}
@@ -229,12 +225,12 @@ InitializeSCSISystemThread()
 
 	HANDLE SysThreadHandle {};
 	auto Status = PsCreateSystemThread(&SysThreadHandle,
-									   THREAD_ALL_ACCESS,
-									   nullptr,
-									   nullptr,
-									   nullptr,
-									   ThreadRoutine,
-									   nullptr);
+					   THREAD_ALL_ACCESS,
+					   nullptr,
+					   nullptr,
+					   nullptr,
+					   ThreadRoutine,
+					   nullptr);
 	if (SysThreadHandle > 0)
 		ZwClose(SysThreadHandle);
 	return Status;
