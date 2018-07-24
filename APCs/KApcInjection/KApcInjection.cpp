@@ -74,67 +74,66 @@ ApcImageCallback(
 	if (!Pid)
 		return;
 
-	if (ImageName->Buffer && ImageName->Length > 2) {
-		auto k32 = wcsrchr(ImageName->Buffer, L'\\');
-		++k32;
-		if (wcscmp(k32, L"kernel32.dll") == 0) {
-			if (strcmp(PsGetProcessImageFileName(IoGetCurrentProcess()), "notepad.exe") != 0)
-				return;
-			ULONG Rva;
-			auto Status = Injection::KGetRoutineAddressFromModule(L"\\SystemRoot\\System32\\Kernel32.dll",
-									      "LoadLibraryW",
-									      &Rva);
-			if (!NT_SUCCESS(Status))
-				return;
+	UNICODE_STRING k32 = RTL_CONSTANT_STRING(L"\\Windows\\System32\\kernel32.dll");
+	if (RtlCompareUnicodeString(ImageName, &k32, TRUE) == 0) {
+		
+		if (strcmp(PsGetProcessImageFileName(IoGetCurrentProcess()), "notepad.exe") != 0)
+			return;
+		ULONG Rva;
+		auto Status = Injection::KGetRoutineAddressFromModule(L"\\SystemRoot\\System32\\Kernel32.dll",
+								      "LoadLibraryW",
+								      &Rva);
+		if (!NT_SUCCESS(Status))
+			return;
 
-			LoadLibrary = (_LoadLibrary) ((ULONG_PTR) ImageInfo->ImageBase + Rva);
-			dprintf("LoadLibrary: 0x%p\n", LoadLibrary);
+		LoadLibrary = (_LoadLibrary) ((ULONG_PTR) ImageInfo->ImageBase + Rva);
+		dprintf("LoadLibrary: 0x%p\n", LoadLibrary);
 #if defined(INJECTION)
-			auto Apc = (PKAPC) ExAllocatePoolWithTag(NonPagedPool,
-								 sizeof(KAPC),
-								 KAPC_TAG);
-			KeInitializeApc(Apc,
-					KeGetCurrentThread(),
-					OriginalApcEnvironment,
-					(PKKERNEL_ROUTINE) ApcInjectionRoutine,
-					nullptr,
-					nullptr,
-					KernelMode,
-					nullptr);
-			if (!KeInsertQueueApc(Apc, nullptr, nullptr, IO_NO_INCREMENT)) {
-				ExFreePoolWithTag(Apc, KAPC_TAG);
-				return;
-			}
-#else
-			/* APC test to see where the NormalRoutine will get executed */
-			auto kApc = (PKAPC) ExAllocatePoolWithTag(NonPagedPool,
-								  sizeof(KAPC),
-								  KAPC_TAG);
-
-			auto KernelRoutine = [](PKAPC Apc, PKNORMAL_ROUTINE*, PVOID*, PVOID*, PVOID*)
-			{
-				ExFreePoolWithTag(Apc, KAPC_TAG);
-				dprintf("KernelRoutine IRQL = %d APC_LEVEL\n", KeGetCurrentIrql());
-			};
-			auto NormalRoutine = [](PVOID, PVOID, PVOID)
-			{
-				dprintf("NormalRoutine IRQL = %d PASSIVE_LEVEL\n", KeGetCurrentIrql());
-			};
-
-			KeInitializeApc(kApc,
-					KeGetCurrentThread(),
-					OriginalApcEnvironment,
-					KernelRoutine,
-					nullptr,
-					(PKNORMAL_ROUTINE) LoadLibrary,
-					UserMode,
-					nullptr);
-			KeInsertQueueApc(kApc, 0, 0, IO_NO_INCREMENT);
-#endif
+		auto Apc = (PKAPC) ExAllocatePoolWithTag(NonPagedPool,
+							 sizeof(KAPC),
+							 KAPC_TAG);
+		KeInitializeApc(Apc,
+				KeGetCurrentThread(),
+				OriginalApcEnvironment,
+				(PKKERNEL_ROUTINE) ApcInjectionRoutine,
+				nullptr,
+				nullptr,
+				KernelMode,
+				nullptr);
+		if (!KeInsertQueueApc(Apc, nullptr, nullptr, IO_NO_INCREMENT)) {
+			ExFreePoolWithTag(Apc, KAPC_TAG);
+			return;
 		}
-	}
+#else
+		/* APC test to see where the NormalRoutine will get executed */
+		auto kApc = (PKAPC) ExAllocatePoolWithTag(NonPagedPool,
+							  sizeof(KAPC),
+							  KAPC_TAG);
 
+		auto KernelRoutine = [](PKAPC Apc, PKNORMAL_ROUTINE*, PVOID*, PVOID*, PVOID*)
+		{
+			ExFreePoolWithTag(Apc, KAPC_TAG);
+			dprintf("KernelRoutine IRQL = %d APC_LEVEL\n", KeGetCurrentIrql());
+		};
+		auto NormalRoutine = [](PVOID, PVOID, PVOID)
+		{
+			dprintf("NormalRoutine IRQL = %d PASSIVE_LEVEL\n", KeGetCurrentIrql());
+		};
+
+		KeInitializeApc(kApc,
+				KeGetCurrentThread(),
+				OriginalApcEnvironment,
+				KernelRoutine,
+				nullptr,
+				(PKNORMAL_ROUTINE) LoadLibrary,
+				UserMode,
+				nullptr);
+		KeInsertQueueApc(kApc, 0, 0, IO_NO_INCREMENT);
+#endif
+	}
 }
+
+
 
 
 
