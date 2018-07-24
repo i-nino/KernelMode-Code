@@ -12,5 +12,6 @@ the I/O Manager would do, by creating an IRP from scratch to service the deletio
 I decompiled all the routines involved and created a driver that implements them successfully, as well
 as demonstrating how a standard file deletion would take place from kernel mode.  A system thread is created
 to carry out the IRP deletion part, and a Worker Item is created to implement the standard file deletion process.
+In the APCInjection directory, there is also a nt!NtReadFile version I implemented in a similar manner.
 
 ![Alt Text](irpdelete.gif)
