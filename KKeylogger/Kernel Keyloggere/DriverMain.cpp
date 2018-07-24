@@ -7,9 +7,6 @@ extern "C" {
 	DRIVER_INITIALIZE
 	DriverEntry;
 
-	DRIVER_UNLOAD
-	DriverUnload;
-
 	NTSTATUS
 	KInitKeylogger(
 		PDRIVER_OBJECT
