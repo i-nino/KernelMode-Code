@@ -88,6 +88,9 @@ ScsiQueryCapacity(
 	ULONG LogicalBlockAddress, BytesPerBlock;
 
 	auto ReadCapacityData = (PREAD_CAPACITY_DATA) ExAllocatePoolWithTag(NonPagedPool,
+									    0x8,
+									    'iscs');
+									    
 																		8,
 																		'iscs');
 	SCSI_PASS_THROUGH_DIRECT ScsiData;
@@ -117,7 +120,7 @@ ScsiQueryCapacity(
 						 FALSE,
 						 &Event,
 						 &StatusBlk);
-if (Irp) {
+	if (Irp) {
 		auto Status = IoCallDriver(DeviceObj, Irp);
 
 		if (Status == STATUS_PENDING) {
