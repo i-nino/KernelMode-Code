@@ -29,24 +29,24 @@ DriverEntry(
 		UNREFERENCED_PARAMETER(DriverObj);
 	};
 
-	
+	/* beginning of sample_f routine */
 	ULONG NumOfActualDevices;
 	PDEVICE_OBJECT DeviceObjs[1024];
 	PDRIVER_OBJECT DiskDriver;
 	UNICODE_STRING DiskDriverPath = RTL_CONSTANT_STRING(L"\\Driver\\Disk");
 	Status = ObReferenceObjectByName(&DiskDriverPath,
-									 OBJ_CASE_INSENSITIVE,
-									 nullptr,
-									 0,
-									 (POBJECT_TYPE) *IoDriverObjectType,
-									 KernelMode,
-									 nullptr,
-									 (PVOID*) &DiskDriver);
+					 OBJ_CASE_INSENSITIVE,
+					 nullptr,
+					 0,
+					 (POBJECT_TYPE) *IoDriverObjectType,
+					 KernelMode,
+					 nullptr,
+					 (PVOID*) &DiskDriver);
 	if (NT_SUCCESS(Status)) {
 		IoEnumerateDeviceObjectList(DiskDriver,
-									DeviceObjs,
-									0x400,
-									&NumOfActualDevices);
+					    DeviceObjs,
+					    0x400,
+					    &NumOfActualDevices);
 		if (NumOfActualDevices) {
 			do {
 				--NumOfActualDevices;
