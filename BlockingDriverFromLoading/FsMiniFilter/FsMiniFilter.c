@@ -374,8 +374,8 @@ FsMiniPreReadCallback(
 	 
 	PFLT_FILE_NAME_INFORMATION FileNameInfo = { 0 };
 	status = FltGetFileNameInformation(Data,
-									   FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT,
-									   &FileNameInfo);
+					   FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT,
+					   &FileNameInfo);
 	if (NT_SUCCESS(status)) {
 		status = FltParseFileNameInformation(FileNameInfo);
 		if (NT_SUCCESS(status)) {
@@ -412,19 +412,17 @@ FsMiniPreWriteCallback(
 	UNREFERENCED_PARAMETER(CompletionContext);
 	PFLT_FILE_NAME_INFORMATION FileNameInfo = { 0 };
 	status = FltGetFileNameInformation(Data,
-									   FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT,
-									   &FileNameInfo);
+					   FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT,
+					   &FileNameInfo);
 	if (NT_SUCCESS(status)) {
 		status = FltParseFileNameInformation(FileNameInfo);
 		if (NT_SUCCESS(status)) {
 			if (FileNameInfo->Name.Length > 2) {
 				//DbgPrint("[+] (FileName) %wZ\n", FileNameInfo->Name);
-				wchar_t* TargetFileName = wcsstr(FileNameInfo->Name.Buffer, 
-												 L"open_me.txt");
+				wchar_t* TargetFileName = wcsstr(FileNameInfo->Name.Buffer,  L"open_me.txt");
 				if (TargetFileName) { 
 					TargetFileName = _wcsupr(TargetFileName);
-					if (_wcsicmp(L"OPEN_ME.txt", 
-								TargetFileName) == 0) 
+					if (_wcsicmp(L"OPEN_ME.txt",  TargetFileName) == 0) 
 					{
 						DbgPrint("(!) [%ws] BLOCKED!\n", TargetFileName);
 						Data->IoStatus.Status = STATUS_INVALID_PARAMETER;
@@ -460,8 +458,8 @@ FsMiniPreSectionSyncCallback(
 	if (Data->Iopb->Parameters.AcquireForSectionSynchronization.PageProtection == PAGE_EXECUTE) {
 		PFLT_FILE_NAME_INFORMATION FileNameInfo = { 0 };
 		status = FltGetFileNameInformation(Data,
-										   FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT,
-										   &FileNameInfo);
+						   FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT,
+						   &FileNameInfo);
 		if (NT_SUCCESS(status)) {
 			status = FltParseFileNameInformation(FileNameInfo);
 			if (NT_SUCCESS(status)) {
@@ -473,8 +471,7 @@ FsMiniPreSectionSyncCallback(
 					TargetFileName = wcsstr(TargetFileName, L"KERNELEXPLORER.SYS");
 					
 					if (TargetFileName) {
-						if (_wcsicmp(L"KERNELEXPLORER.SYS",
-									 TargetFileName) == 0) 
+						if (_wcsicmp(L"KERNELEXPLORER.SYS", TargetFileName) == 0) 
 						{
 							DbgPrint("(!) BLOCKING [%ws] FROM LOADING!\n", TargetFileName);
 							Data->IoStatus.Status = STATUS_ACCESS_DENIED;
