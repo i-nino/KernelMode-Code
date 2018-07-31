@@ -18,9 +18,9 @@ kGetPidFromName(
 		dprintf("0x%08X - ZwQuerySystemInfo\n", Status);
 		return Pid;
 	}
-	auto PsInfo = (PSYSTEM_PROCESS_INFORMATION) ExAllocatePoolWithTag(nX,
-																	  BufSize,
-																	  KEXP_TAG);
+	auto PsInfo = (PSYSTEM_PROCESS_INFORMATION) ExAllocatePoolWithTag(NonPagedPoolNx,
+									  BufSize,
+									  KEXP_TAG);
 	if (!PsInfo)
 		return Pid;
 
@@ -76,7 +76,7 @@ kGetK32BaseAddress()
 	UNICODE_STRING k32 = RTL_CONSTANT_STRING(L"kernel32.dll");
 
 	KeStackAttachProcess((PRKPROCESS) Process, &ApcState);
-	
+	/* not safely accessed for demo purposes */
 	auto CurrentEntry = Peb->Ldr->InLoadOrderModuleList.Flink;
 	LDR_DATA_TABLE_ENTRY* Current {};
 	while (CurrentEntry != &Peb->Ldr->InLoadOrderModuleList && CurrentEntry != nullptr) {
@@ -114,7 +114,17 @@ ImageCallback(
 
 }
 
+#define KNOWN_DLLS_PATH			L"\\KnownDlls\\"
+#define SYSTEM_PATH			L"\\SystemRoot\\System32\\"
+#define KERNEL32			L"kernel32.dll"
+#define NTDLL				L"ntdll.dll"
 
+
+enum class SYSTEM_DLL
+{
+	ntdll,
+	kernel32
+};
 PVOID
 kGetSystemDllBase(
 	SYSTEM_DLL Module
