@@ -125,6 +125,7 @@ enum class SYSTEM_DLL
 	ntdll,
 	kernel32
 };
+
 PVOID
 kGetSystemDllBase(
 	SYSTEM_DLL Module
