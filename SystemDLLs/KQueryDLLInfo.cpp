@@ -1,4 +1,6 @@
-/* simply routines that can be used in other parts of code */
+/* quick, dirty routines that can be used in other parts of code.
+   Some in fact do rely on other parts, but their intent is obvious.
+*/
 
 
 HANDLE
@@ -9,9 +11,9 @@ kGetPidFromName(
 	ULONG BufSize {};
 	HANDLE Pid {};
 	auto Status = ZwQuerySystemInformation(SystemProcessInformation,
-										   nullptr,
-										   0,
-										   &BufSize);
+					       nullptr,
+					       0,
+					       &BufSize);
 	if (Status != STATUS_INFO_LENGTH_MISMATCH){
 		dprintf("0x%08X - ZwQuerySystemInfo\n", Status);
 		return Pid;
@@ -23,14 +25,15 @@ kGetPidFromName(
 		return Pid;
 
 	Status = ZwQuerySystemInformation(SystemProcessInformation,
-									  PsInfo,
-									  BufSize,
-									  nullptr);
+	                                  PsInfo,
+					  BufSize,
+					  nullptr);
 	if (!NT_SUCCESS(Status)) {
 		dprintf("0x%08X - ZwQuerySystemInfo\n", Status);
 		ExFreePoolWithTag(PsInfo, KEXP_TAG);
 		return Pid;
 	}
+	
 	auto OriginalPsInfo = PsInfo;
 	UNICODE_STRING ProcessName;
 	RtlInitUnicodeString(&ProcessName, PsName);
@@ -50,7 +53,9 @@ kGetPidFromName(
 }
 
 
-
+/* parsing the PEB to get k32 base.  Though not done here, accesing the PEB 
+   user address (like any user-mode VAS from kernel mode) needs to be
+   probed for in try/execept block */
 PVOID
 kGetK32BaseAddress()
 {
