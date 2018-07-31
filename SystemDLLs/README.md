@@ -1,3 +1,3 @@
-# Various ways of querying information of (system) DLLs from kernel-mode
+# Kernel querying routines
 
-from parsing undocumented structures, KnownDlls, callback routines, ...
+Various ways of querying information of (system) DLLs from kernel-mode from parsing undocumented structures, KnownDlls, to callback routines.
