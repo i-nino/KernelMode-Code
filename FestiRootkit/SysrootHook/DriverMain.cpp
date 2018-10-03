@@ -75,24 +75,24 @@ InitiailzeHook()
 	OBJECT_ATTRIBUTES ObjAttrs; 
 	IO_STATUS_BLOCK IoStatusBlk {};
 	InitializeObjectAttributes(&ObjAttrs,
-							   &SystemRoot,
-							   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
-							   nullptr, nullptr);
+				   &SystemRoot, 
+				   OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE,
+				   nullptr, nullptr);
 							   
 	HANDLE SysRootHandle {};
-	auto Status = IoCreateFile(&SysRootHandle,
-							   GENERIC_READ,
-							   &ObjAttrs,
-							   &IoStatusBlk,
-							   nullptr,
-							   0ul,
-							   FILE_SHARE_READ | FILE_SHARE_WRITE,
-							   FILE_OPEN,
-							   FILE_DIRECTORY_FILE,
-							   nullptr, 0ul,
-							   CreateFileTypeNone,
-							   nullptr,
-							   IO_NO_PARAMETER_CHECKING);
+	auto Status = IoCreateFile(&SysRootHandle, 
+				   GENERIC_READ, 
+				   &ObjAttrs, 
+				   &IoStatusBlk,
+				   nullptr,
+				   0ul,
+				   FILE_SHARE_READ | FILE_SHARE_WRITE,
+				   FILE_OPEN,
+				   FILE_DIRECTORY_FILE,
+				   nullptr, 0ul,
+				   CreateFileTypeNone,
+				   nullptr,
+				   IO_NO_PARAMETER_CHECKING);
 
 	if (!NT_SUCCESS(Status))
 	{
@@ -102,11 +102,11 @@ InitiailzeHook()
 	
 	PFILE_OBJECT SysRootFileObj {};
 	Status = ObReferenceObjectByHandle(SysRootHandle,
-									   FILE_READ_ACCESS,
-									   *IoFileObjectType,
-									   KernelMode,
-									   (PVOID*) &SysRootFileObj,
-									   nullptr);
+					   FILE_READ_ACCESS,
+					   *IoFileObjectType,
+					   KernelMode,
+					   (PVOID*) &SysRootFileObj,
+					   nullptr);
 
 	ObCloseHandle(SysRootHandle, KernelMode);
 	if (!NT_SUCCESS(Status))
@@ -120,12 +120,13 @@ InitiailzeHook()
 
 	PDEVICE_OBJECT DeviceObj;
 	Status = IoCreateDevice(KExplorer::KDriverObj,
-							sizeof(SysRootExtension),
-							nullptr,
-							TargetDevice->DeviceType, 
-							TargetDevice->Characteristics,
-							FALSE,
-							&DeviceObj);
+				sizeof(SysRootExtension),
+				nullptr,
+				TargetDevice->DeviceType, 
+				TargetDevice->Characteristics,
+				FALSE,
+				&DeviceObj);
+				
 	if (!NT_SUCCESS(Status))
 	{
 		dprintf("IoCreateDevice(): 0x%08X [%d]\n", Status, __LINE__);
@@ -149,15 +150,14 @@ InitiailzeHook()
 	Extension->OwnDevice = DeviceObj;
 	Extension->WhichDevice = 1ul;
 	Status = IoAttachDeviceToDeviceStackSafe(DeviceObj, 
-											 TargetDevice, 
-											 &Extension->AttachedDevice);
+						 TargetDevice, 
+						 &Extension->AttachedDevice);
 	if (!NT_SUCCESS(Status))
 	{
 		Extension->OwnDevice = nullptr;
 		IoDeleteDevice(DeviceObj);
 		Status = STATUS_UNSUCCESSFUL;
 	}
-	
 	
 	for (UCHAR i {}; i < IRP_MJ_MAXIMUM_FUNCTION; ++i)
 	{
@@ -177,8 +177,8 @@ InitiailzeHook()
 					/* TODO: fix this piece of shit */
 					null_terminate(&Stack->FileObject->FileName);
 					if (wcsistr(Stack->FileObject->FileName.Buffer,
-								Stack->FileObject->FileName.Length,
-								L"KExplorer.sys"))
+					            Stack->FileObject->FileName.Length,
+						    L"KExplorer.sys"))
 					{
 						Irp->IoStatus.Status = STATUS_OBJECT_PATH_NOT_FOUND;
 						Irp->IoStatus.Information = 5ul;
@@ -197,13 +197,11 @@ InitiailzeHook()
 	{
 		IoCopyCurrentIrpStackLocationToNext(Irp);
 		IoSetCompletionRoutine(Irp,
-							   (PIO_COMPLETION_ROUTINE) SystemRootHookCompletionRoutine,
-							   IoGetCurrentProcess(),
-							   TRUE,
-							   TRUE,
-							   FALSE);
+		                       (PIO_COMPLETION_ROUTINE) SystemRootHookCompletionRoutine,
+				       IoGetCurrentProcess(),
+				       TRUE, TRUE, FALSE);
 		return IoCallDriver(((SysRootExtension*) DeviceObj->DeviceExtension)->AttachedDevice,
-							Irp);
+		                    Irp);
 
 	};
 
