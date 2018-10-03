@@ -88,9 +88,9 @@ SystemRootHookCompletionRoutine(
 	if (KeGetCurrentIrql() == PASSIVE_LEVEL)
 	{
 		if (Extension->WhichDevice == 1 &&
-			Stack->MajorFunction == IRP_MJ_DIRECTORY_CONTROL &&
-			Stack->MinorFunction == IRP_MN_QUERY_DIRECTORY &&
-			Process != nullptr)
+		    Stack->MajorFunction == IRP_MJ_DIRECTORY_CONTROL &&
+		    Stack->MinorFunction == IRP_MN_QUERY_DIRECTORY &&
+		    Process != nullptr)
 		{
 			KAPC_STATE ApcState;
 			KeStackAttachProcess((PRKPROCESS) Process, &ApcState);
@@ -107,8 +107,8 @@ SystemRootHookCompletionRoutine(
 					while (FileInfo->NextEntryOffset)
 					{
 						if (wcsistr(FileInfo->FileName,
-									FileInfo->FileNameLength,
-									L"KExplorer.sys"))
+						            FileInfo->FileNameLength,
+							    L"KExplorer.sys"))
 						{
 							memset(FileInfo->FileName, 0, FileInfo->FileNameLength);
 						}
@@ -127,8 +127,8 @@ SystemRootHookCompletionRoutine(
 					while (FileIdInfo->NextEntryOffset)
 					{
 						if (wcsistr(FileIdInfo->FileName,
-									FileIdInfo->FileNameLength,
-									L"KExplorer.sys"))
+						            FileIdInfo->FileNameLength,
+							    L"KExplorer.sys"))
 						{
 							memset(FileIdInfo->FileName, 0, FileIdInfo->FileNameLength);
 						}
