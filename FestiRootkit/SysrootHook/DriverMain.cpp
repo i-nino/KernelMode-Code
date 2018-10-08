@@ -1,4 +1,4 @@
-
+#include "KExplorer.h"
 
 extern "C" {
 	DRIVER_INITIALIZE DriverEntry;
