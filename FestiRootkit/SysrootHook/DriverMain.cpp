@@ -54,13 +54,6 @@ DriverEntry(
 )
 {
 	KExplorer::KDriverObj = DriverObj;
-	KExplorer::KExplorerSys = (wchar_t*) ExAllocatePoolWithTag(NonPagedPoolNx,
-								   KEXP_DRIVERNAME_LEN + 1,
-								   KEXP_TAG);
-	RtlSecureZeroMemory(KExplorer::KExplorerSys, KEXP_DRIVERNAME_LEN + 1);
-	wcsncpy(KExplorer::KExplorerSys,
-		KEXP_DRIVERNAME,
-		KEXP_DRIVERNAME_LEN + 1);
 	
 	auto Status = InitializeHook();
 	if (NT_SUCCESS(Status)
