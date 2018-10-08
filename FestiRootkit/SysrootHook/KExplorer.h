@@ -4,6 +4,7 @@
 
 
 #define KEXP_NAME	L"KExplorer"
+#define KEXP_DRIVERNAME L"KExplorer.sys"
 #define KEXP_TAG	'pxeK'
 
 #define dprintf(Format, ...)	\
@@ -14,7 +15,7 @@ namespace KExplorer {
 
 	extern PDRIVER_OBJECT KDriverObj;
 	extern FAST_IO_DISPATCH FastIoDispatch;
-	
+	extern wchar_t* KExplorerSys;
 #pragma region FastIo
 	BOOLEAN FsFilterFastIoCheckIfPossible(
 		__in PFILE_OBJECT       FileObject,
