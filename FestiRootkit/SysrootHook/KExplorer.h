@@ -3,9 +3,10 @@
 #include <ntifs.h>
 
 
-#define KEXP_NAME	L"KExplorer"
-#define KEXP_DRIVERNAME L"KExplorer.sys"
-#define KEXP_TAG	'pxeK'
+#define KEXP_NAME		L"KExplorer"
+#define KEXP_DRIVERNAME 	L"KExplorer.sys"
+const ULONG KEXP_DRIVERNAME_LEN	13ul
+#define KEXP_TAG		'pxeK'
 
 #define dprintf(Format, ...)	\
 		DbgPrint(Format, __VA_ARGS__)
