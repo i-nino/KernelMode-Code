@@ -1,0 +1,3 @@
+﻿  main.cpp
+d:\repos\code\grokexplorations\grokexplorations\main.cpp(57): warning C4312: 'type cast': conversion from 'DWORD' to 'void *' of greater size
+  GROKExplorations.vcxproj -> D:\repos\code\GROKExplorations\x64\Debug\GROKExplorations.exe

@@ -1,0 +1,8 @@
+﻿  main.cpp
+d:\repos\code\grokexplorations\grokexplorations\main.cpp(37): warning C4312: 'type cast': conversion from 'DWORD' to 'void *' of greater size
+  Generating code
+  3 of 20 functions (15.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  GROKExplorations.vcxproj -> D:\repos\code\GROKExplorations\x64\Release\GROKExplorations.exe
