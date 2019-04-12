@@ -41,9 +41,9 @@ hiddenCall proc
 	mov [rsp+78h], r9
 	mov r11, rcx
 	shl r11, 3		; determine the # of args
-	mov r10, [rsp+r11+70h]
+	mov r10, [rsp+r11+70h]  ; set callRsi on top of the stack, the 2nd return
 	push r10
-	mov r10, [rsp+r11+70h]
+	mov r10, [rsp+r11+70h]  ; set the actual routine to call, the 1st return
 	push r10
 	cmp rcx, 0
 	jz runTheRoutine
@@ -77,8 +77,8 @@ runTheRoutine:
 	mov [rsp+r11+80h], rbx
 	mov [rsp+r11+88h], rbp
 	xor rbp, rbp
-	lea rbx, [rsp+r11+70h]				; store ogReturn in rbx
+	lea rbx, [rsp+r11+70h]			; store ogReturn in rbx
 	lea rsi, cleanupEverybodyCleanup	; you know it
-	ret
+	ret                                     ; call routine provided
 hiddenCall endp
 end
