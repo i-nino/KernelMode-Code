@@ -77,7 +77,7 @@ runTheRoutine:
 	mov [rsp+r11+80h], rbx
 	mov [rsp+r11+88h], rbp
 	xor rbp, rbp
-	lea rbx, [rsp+r11+70h]			; store ogReturn in rbx
+	lea rbx, [rsp+r11+70h]			; store &ogReturn in rbx
 	lea rsi, cleanupEverybodyCleanup	; you know it
 	ret                                     ; call routine provided
 hiddenCall endp
