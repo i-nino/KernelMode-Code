@@ -14,7 +14,7 @@ loopHashChar:
 	xor edx, ecx
 	add rax, 1
 	mov cl, [rax]
-	test cl, cl			;test NUL byte
+	test cl, cl		;test NUL byte
 	jnz loopHashChar
 	mov eax, edx		;return the hash
 exit:
@@ -40,7 +40,7 @@ cleanupEverybodyCleanup endp
 
 ASM_HiddenCall proc
 	pop rax
-	mov r11, rax	; store return address in r11
+	mov r11, rax		; store return address in r11
 	xor rax, rax
 	mov rax, rsp
 	xor rax, rax
@@ -99,7 +99,7 @@ runTheRoutine:
 	mov [rsp+r11+80h], rbx
 	mov [rsp+r11+88h], rbp
 	xor rbp, rbp
-	lea rbx, [rsp+r11+70h]				; store ogReturn in rbx
+	lea rbx, [rsp+r11+70h]			; store ogReturn in rbx
 	lea rsi, cleanupEverybodyCleanup	; you know it
 	ret
 ASM_HiddenCall endp
@@ -129,7 +129,7 @@ subtractAndKeepGoing:
 	sub rbx, rsi
 	jmp checkDosSignature
 foundImageBase:
-	mov [r12], rbx    ;store image base in 3rd param
+	mov [r12], rbx    			;store image base in 3rd param
 	mov rsi, [rsp+40h]
 	mov rbx, [rsp+30h]
 	mov rbp, [rsp+38h]
