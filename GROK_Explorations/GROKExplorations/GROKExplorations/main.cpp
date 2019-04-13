@@ -4,21 +4,21 @@
 
 extern "C" {
    
-void* hiddenCall(
-    uint32_t NumOfArgs,
-    void* Arg1,
-    void* Arg2,
-    void* Arg3,
-    void* Arg4,
-    void* Arg5,
-    void* Arg6
-);
+   void* hiddenCall(
+       uint32_t NumOfArgs,
+       void* Arg1,
+       void* Arg2,
+       void* Arg3,
+       void* Arg4,
+       void* Arg5,
+       void* Arg6
+   );
 
-//
-// instead of searching through the memory for another,
-// just stick with Captain Obvious
-//
-void* callRsi();
+   //
+   // instead of searching through the memory for another,
+   // just stick with Captain Obvious
+   //
+   void* callRsi();
 
 }
 
