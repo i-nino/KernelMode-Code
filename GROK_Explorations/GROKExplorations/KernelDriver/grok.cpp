@@ -110,6 +110,7 @@ auto GROK_Explorations() -> NTSTATUS
     
     ULONG_PTR NtosBase {};
     ASM_LocateKernelBaseFromRoutine((void*) NtQueryDirectoryFile, 0x1000, &NtosBase);
+    
     auto GetFunctionFromHash = [&NtosBase](INT32 FunctionHash) -> void*
     {
         auto NtHeader = (PIMAGE_NT_HEADERS) (NtosBase + ((PIMAGE_DOS_HEADER) NtosBase)->e_lfanew);
@@ -162,9 +163,9 @@ auto GROK_Explorations() -> NTSTATUS
             dprintf("--[ 0x%p | %s\n", DriverInfo->Modules[i].ImageBase, DriverName);
         }
     }
+    
     hidden::Free(DriverInfo);
 
     return Status;
-
 
 }
