@@ -1,4 +1,3 @@
-#pragma once
 #include "kCommon.h"
 #include <intrin.h>
 
