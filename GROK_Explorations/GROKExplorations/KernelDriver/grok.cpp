@@ -1,5 +1,4 @@
 #include "kCommon.h"
-#include <intrin.h>
 
 extern "C" {
     ///
